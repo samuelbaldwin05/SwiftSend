@@ -3,667 +3,178 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SwiftSend - CSV to Email Template App</title>
-    <style>
-        /* Base styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
-            line-height: 1.5;
-            color: #1f2937;
-            background-color: #f9fafb;
-        }
-
-        .app-container {
-            min-height: 100vh;
-            padding: 1.5rem;
-        }
-
-        .main-content {
-            max-width: 72rem;
-            margin: 0 auto;
-        }
-
-        .app-title {
-            font-size: 1.875rem;
-            font-weight: 700;
-            color: #111827;
-            margin-bottom: 0.5rem;
-            text-align: center;
-        }
-
-        .app-subtitle {
-            color: #6b7280;
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .card {
-            background: white;
-            border-radius: 0.5rem;
-            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .section-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-        }
-
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            padding: 0.5rem 1rem;
-            border-radius: 0.5rem;
-            font-size: 0.875rem;
-            font-weight: 500;
-            text-decoration: none;
-            cursor: pointer;
-            border: none;
-            transition: all 0.15s ease-in-out;
-            margin: 0.25rem;
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .btn-primary {
-            background-color: #3b82f6;
-            color: white;
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            background-color: #2563eb;
-        }
-
-        .btn-secondary {
-            background-color: white;
-            color: #374151;
-            border: 1px solid #d1d5db;
-        }
-
-        .form-input, .form-textarea {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.5rem;
-            font-size: 0.875rem;
-            margin-bottom: 1rem;
-        }
-
-        .form-input:focus, .form-textarea:focus {
-            outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-        }
-
-        .form-textarea {
-            min-height: 200px;
-            resize: vertical;
-        }
-
-        .file-upload-zone {
-            border: 2px dashed #d1d5db;
-            border-radius: 0.5rem;
-            padding: 2rem;
-            text-align: center;
-            transition: border-color 0.2s ease-in-out;
-        }
-
-        .grid {
-            display: grid;
-            gap: 1.5rem;
-        }
-
-        .grid-cols-2 {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-
-        .grid-cols-3 {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-        }
-
-        .progress-steps {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 2rem;
-        }
-
-        .step-circle {
-            width: 2rem;
-            height: 2rem;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.875rem;
-            font-weight: 600;
-            margin: 0 1rem;
-        }
-
-        .step-circle.active {
-            background-color: #3b82f6;
-            color: white;
-        }
-
-        .step-circle.completed {
-            background-color: #10b981;
-            color: white;
-        }
-
-        .step-circle.inactive {
-            background-color: #d1d5db;
-            color: #6b7280;
-        }
-
-        .column-button {
-            width: 100%;
-            text-align: left;
-            padding: 0.5rem;
-            background-color: #f9fafb;
-            border: 1px solid #e5e7eb;
-            border-radius: 0.5rem;
-            margin-bottom: 0.5rem;
-            cursor: pointer;
-            transition: background-color 0.15s ease-in-out;
-        }
-
-        .column-button:hover {
-            background-color: #f3f4f6;
-        }
-
-        .email-draft-card {
-            border: 1px solid #e5e7eb;
-            border-radius: 0.5rem;
-            padding: 1rem;
-            cursor: pointer;
-            transition: all 0.15s ease-in-out;
-            margin-bottom: 1rem;
-        }
-
-        .email-draft-card:hover {
-            border-color: #d1d5db;
-        }
-
-        .email-draft-card.selected {
-            border-color: #3b82f6;
-            background-color: #eff6ff;
-        }
-
-        .email-draft-card.sent {
-            background-color: #f0fdf4;
-            border-color: #bbf7d0;
-        }
-
-        .table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 1rem;
-        }
-
-        .table th, .table td {
-            padding: 0.5rem;
-            border: 1px solid #e5e7eb;
-            text-align: left;
-        }
-
-        .table th {
-            background-color: #f9fafb;
-            font-weight: 500;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .error {
-            background-color: #fef2f2;
-            border: 1px solid #fecaca;
-            color: #dc2626;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            margin-bottom: 1rem;
-        }
-
-        @media (max-width: 768px) {
-            .grid-cols-2, .grid-cols-3 {
-                grid-template-columns: 1fr;
-            }
-            
-            .app-container {
-                padding: 1rem;
-            }
-        }
-    </style>
+    <title>SwiftSend - Email Campaign Builder</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="app" class="app-container">
-        <div class="main-content">
-            <h1 class="app-title">SwiftSend</h1>
-            <p class="app-subtitle">Transform your CSV data into personalized email campaigns</p>
-            
-            <!-- Progress Steps -->
-            <div class="progress-steps">
-                <div class="step-circle active" id="step1">1</div>
-                <div class="step-circle inactive" id="step2">2</div>
-                <div class="step-circle inactive" id="step3">3</div>
-            </div>
-
-            <!-- Error Display -->
-            <div id="errorDisplay" class="error hidden"></div>
-
-            <!-- Step 1: File Upload -->
-            <div id="uploadStep" class="card">
-                <h2 class="section-title">📁 Upload Your Data</h2>
-                <div class="file-upload-zone">
-                    <p>Choose a CSV or Excel file to upload</p>
-                    <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" class="form-input" style="margin-top: 1rem;">
-                    <p style="font-size: 0.75rem; color: #6b7280; margin-top: 0.5rem;">Supports CSV, Excel (.xlsx, .xls) files</p>
-                </div>
-                
-                <div id="dataPreview" class="hidden">
-                    <h3 style="margin-top: 1.5rem;">Data Preview</h3>
-                    <div id="previewTable"></div>
-                    <button id="continueToTemplate" class="btn btn-primary" style="margin-top: 1rem;">Continue to Template</button>
-                </div>
-            </div>
-
-            <!-- Step 2: Template Editor -->
-            <div id="templateStep" class="card hidden">
-                <h2 class="section-title">✉️ Create Email Template</h2>
-                <div class="grid grid-cols-3">
-                    <div style="grid-column: span 2;">
-                        <label>To:</label>
-                        <input type="text" id="emailTo" class="form-input" placeholder="{{email}} or recipient@example.com">
-                        
-                        <label>Subject:</label>
-                        <input type="text" id="emailSubject" class="form-input" placeholder="Hello {{name}}, regarding your inquiry...">
-                        
-                        <label>Message:</label>
-                        <textarea id="emailBody" class="form-textarea" placeholder="Dear {{name}},
-
-Thank you for your interest..."></textarea>
-                        
-                        <div>
-                            <button id="backToUpload" class="btn btn-secondary">Back</button>
-                            <button id="generateEmails" class="btn btn-primary">Generate Emails</button>
-                        </div>
-                    </div>
-                    <div>
-                        <h3>Available Columns</h3>
-                        <p style="font-size: 0.875rem; color: #6b7280; margin-bottom: 1rem;">Click to insert into template</p>
-                        <div id="columnsList"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Step 3: Email Preview -->
-            <div id="previewStep" class="card hidden">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                    <h2 class="section-title">👁️ Email Drafts</h2>
-                    <div>
-                        <button id="editTemplate" class="btn btn-secondary">Edit Template</button>
-                        <button id="openAllOutlook" class="btn btn-primary">📧 Open All in Outlook</button>
-                        <button id="startOver" class="btn btn-secondary">Start Over</button>
-                    </div>
-                </div>
-                
-                <div class="grid grid-cols-2">
-                    <div id="emailsList"></div>
-                    <div>
-                        <div id="selectedEmailPreview"></div>
-                    </div>
-                </div>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="brand">SwiftSend</div>
+            <div class="nav-links">
+                <a href="#upload" class="nav-link active">Import</a>
+                <a href="#template" class="nav-link">Template</a>
+                <a href="#results" class="nav-link">Results</a>
             </div>
         </div>
-    </div>
+    </nav>
 
+    <!-- Main Content -->
+    <main class="main-content">
+        
+        <!-- Upload Section -->
+        <section id="upload">
+            <div class="page-header">
+                <h1 class="page-title">Import Your Data</h1>
+                <p class="page-subtitle">Upload CSV or Excel files to get started</p>
+            </div>
+
+            <div class="grid grid-4-8">
+                <div class="card">
+                    <div class="card-content">
+                        <h3 class="card-title">Upload File</h3>
+                        <div class="upload-area" id="uploadZone">
+                            <h4>Drop file here</h4>
+                            <p>.csv, .xlsx, .xls</p>
+                            <input type="file" id="fileInput" class="file-input" accept=".csv,.xlsx,.xls">
+                            <button class="btn" onclick="document.getElementById('fileInput').click()">
+                                Choose File
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div id="dataPreview" class="hidden">
+                        <div class="preview-header">
+                            <h3>Data Preview</h3>
+                            <div id="previewStats" class="preview-stats"></div>
+                        </div>
+                        <div id="previewTable"></div>
+                    </div>
+                    <div id="uploadPlaceholder" class="fallback-message">
+                        <h4>No Data Uploaded</h4>
+                        <p>Upload a file to see your data preview here</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Template Section -->
+        <section id="template">
+            <div class="page-header">
+                <h1 class="page-title">Create Template</h1>
+                <p class="page-subtitle">Design your personalized email message</p>
+            </div>
+
+            <div class="grid grid-4-8">
+                <div class="card">
+                    <div class="sidebar">
+                        <div id="fieldsList">
+                            <div class="fallback-message">
+                                <h4>Upload Data First</h4>
+                                <p>Available fields will appear here</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-content">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <h3 class="card-title" style="margin-bottom: 0;">Email Template</h3>
+                            <div style="display: flex; gap: 8px;">
+                                <select id="templatePresets" style="padding: 8px 12px; border: 1px solid var(--border);">
+                                    <option value="">Choose Template</option>
+                                    <option value="pitchbookV">Pitchbook Vitoria</option>
+                                    <option value="introduction">Introduction Email</option>
+                                    <option value="meeting">Meeting Request</option>
+                                    <option value="thank-you">Thank You Email</option>
+                                </select>
+                                <button id="clearTemplate" class="btn btn-outline" style="padding: 8px 16px;">Clear</button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="label">To</label>
+                            <input type="text" id="emailTo" class="input" placeholder="{{email}}">
+                            <div class="help-text">Use {{column}} format or specific email</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="label">Subject</label>
+                            <input type="text" id="emailSubject" class="input" placeholder="Hello {{name}}">
+
+                        </div>
+
+                        <div class="form-group">
+                            <label class="label">Message</label>
+                            <textarea id="emailBody" class="textarea" placeholder="Dear {{name}},
+
+Your personalized message here..."></textarea>
+                        </div>
+
+                        <div style="display: flex; gap: 16px; margin-top: 32px;">
+                            <button id="previewTemplate" class="btn btn-outline">Preview</button>
+                            <button id="generateEmails" class="btn" disabled>Generate Emails</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="templatePreview" class="card hidden" style="margin-top: 30px;">
+                <div class="card-content">
+                    <h3 class="card-title">Template Preview</h3>
+                    <div id="previewContent" style="background: var(--background); padding: 20px; border: 1px solid var(--border);"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section id="results">
+            <div class="page-header">
+                <h1 class="page-title">Email Results</h1>
+                <p class="page-subtitle">Review and send your personalized emails</p>
+            </div>
+
+            <div class="table-card">
+                <div class="table-header">
+                    <h3 class="table-title">Generated Emails</h3>
+                </div>
+                <div class="table-toolbar">
+                    <div class="filters">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="pending">Pending</button>
+                        <button class="filter-btn" data-filter="sent">Sent</button>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button id="exportEmails" class="btn btn-outline">Export</button>
+                        <button id="sendAllEmails" class="btn">Send All</button>
+                    </div>
+                </div>
+                <div id="emailsTableContainer">
+                    <div class="fallback-message">
+                        <h4>Create Template First</h4>
+                        <p>Generate emails to see them here</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+    <!-- Footer -->
+    <footer style="background: var(--surface); border-top: 1px solid var(--border); padding: 40px 0; text-align: center; margin-top: 80px;">
+        <div style="max-width: 1200px; margin: 0 auto; padding: 0 20px;">
+            <p style="color: var(--text-light); font-size: 14px;">
+                Created by <a href="https://sambaldwin.dev" target="_blank" style="color: var(--primary); text-decoration: none; font-weight: 500;">Sam Baldwin</a>
+            </p>
+        </div>
+    </footer>
     <!-- External Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-    <script>
-        // Application State
-        let appState = {
-            currentStep: 'upload',
-            csvData: [],
-            columns: [],
-            emailTemplate: { to: '', subject: '', body: '' },
-            emailDrafts: [],
-            selectedDraft: null
-        };
-
-        // DOM Elements
-        const elements = {
-            fileInput: document.getElementById('fileInput'),
-            dataPreview: document.getElementById('dataPreview'),
-            previewTable: document.getElementById('previewTable'),
-            continueToTemplate: document.getElementById('continueToTemplate'),
-            emailTo: document.getElementById('emailTo'),
-            emailSubject: document.getElementById('emailSubject'),
-            emailBody: document.getElementById('emailBody'),
-            columnsList: document.getElementById('columnsList'),
-            generateEmails: document.getElementById('generateEmails'),
-            backToUpload: document.getElementById('backToUpload'),
-            editTemplate: document.getElementById('editTemplate'),
-            openAllOutlook: document.getElementById('openAllOutlook'),
-            startOver: document.getElementById('startOver'),
-            emailsList: document.getElementById('emailsList'),
-            selectedEmailPreview: document.getElementById('selectedEmailPreview'),
-            errorDisplay: document.getElementById('errorDisplay')
-        };
-
-        // File Upload Handler
-        elements.fileInput.addEventListener('change', handleFileUpload);
-
-        function handleFileUpload(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            const fileExtension = file.name.split('.').pop().toLowerCase();
-
-            if (fileExtension === 'csv') {
-                Papa.parse(file, {
-                    header: true,
-                    dynamicTyping: true,
-                    skipEmptyLines: true,
-                    complete: function(results) {
-                        processParsedData(results.data);
-                    },
-                    error: function(error) {
-                        showError('Error parsing CSV: ' + error.message);
-                    }
-                });
-            } else if (['xlsx', 'xls'].includes(fileExtension)) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    try {
-                        const data = new Uint8Array(e.target.result);
-                        const workbook = XLSX.read(data, { type: 'array' });
-                        const sheetName = workbook.SheetNames[0];
-                        const worksheet = workbook.Sheets[sheetName];
-                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
-                        processParsedData(jsonData);
-                    } catch (error) {
-                        showError('Error parsing Excel file: ' + error.message);
-                    }
-                };
-                reader.readAsArrayBuffer(file);
-            }
-        }
-
-        function processParsedData(data) {
-            if (!data || data.length === 0) {
-                showError('No data found in file');
-                return;
-            }
-
-            appState.csvData = data;
-            appState.columns = Object.keys(data[0] || {});
-            
-            showDataPreview();
-            clearError();
-        }
-
-        function showDataPreview() {
-            const preview = elements.previewTable;
-            let html = `<p><strong>Found ${appState.csvData.length} rows and ${appState.columns.length} columns</strong></p>`;
-            
-            html += '<table class="table"><thead><tr>';
-            appState.columns.slice(0, 5).forEach(column => {
-                html += `<th>${column}</th>`;
-            });
-            if (appState.columns.length > 5) html += '<th>...</th>';
-            html += '</tr></thead><tbody>';
-            
-            appState.csvData.slice(0, 3).forEach(row => {
-                html += '<tr>';
-                appState.columns.slice(0, 5).forEach(column => {
-                    html += `<td>${String(row[column] || '')}</td>`;
-                });
-                if (appState.columns.length > 5) html += '<td>...</td>';
-                html += '</tr>';
-            });
-            
-            html += '</tbody></table>';
-            preview.innerHTML = html;
-            elements.dataPreview.classList.remove('hidden');
-        }
-
-        // Navigation
-        elements.continueToTemplate.addEventListener('click', () => setStep('template'));
-        elements.backToUpload.addEventListener('click', () => setStep('upload'));
-        elements.editTemplate.addEventListener('click', () => setStep('template'));
-        elements.startOver.addEventListener('click', resetApp);
-
-        function setStep(step) {
-            // Hide all steps
-            document.getElementById('uploadStep').classList.add('hidden');
-            document.getElementById('templateStep').classList.add('hidden');
-            document.getElementById('previewStep').classList.add('hidden');
-
-            // Update progress
-            document.getElementById('step1').className = 'step-circle ' + (step === 'upload' ? 'active' : 'completed');
-            document.getElementById('step2').className = 'step-circle ' + (step === 'template' ? 'active' : step === 'preview' ? 'completed' : 'inactive');
-            document.getElementById('step3').className = 'step-circle ' + (step === 'preview' ? 'active' : 'inactive');
-
-            // Show current step
-            if (step === 'upload') {
-                document.getElementById('uploadStep').classList.remove('hidden');
-            } else if (step === 'template') {
-                document.getElementById('templateStep').classList.remove('hidden');
-                setupTemplateEditor();
-            } else if (step === 'preview') {
-                document.getElementById('previewStep').classList.remove('hidden');
-                showEmailPreviews();
-            }
-
-            appState.currentStep = step;
-        }
-
-        function setupTemplateEditor() {
-            // Populate columns list
-            const columnsList = elements.columnsList;
-            columnsList.innerHTML = '';
-            
-            appState.columns.forEach(column => {
-                const button = document.createElement('button');
-                button.className = 'column-button';
-                button.innerHTML = `
-                    <code style="color: #3b82f6;">{{${column}}}</code>
-                    <div style="font-size: 0.75rem; color: #6b7280; margin-top: 0.25rem;">
-                        Sample: ${String(appState.csvData[0]?.[column] || '').substring(0, 30)}...
-                    </div>
-                `;
-                button.addEventListener('click', () => {
-                    insertPlaceholder(column);
-                });
-                columnsList.appendChild(button);
-            });
-        }
-
-        function insertPlaceholder(column) {
-            const placeholder = `{{${column}}}`;
-            const bodyField = elements.emailBody;
-            const start = bodyField.selectionStart;
-            const end = bodyField.selectionEnd;
-            const text = bodyField.value;
-            
-            bodyField.value = text.substring(0, start) + placeholder + text.substring(end);
-            bodyField.focus();
-            bodyField.setSelectionRange(start + placeholder.length, start + placeholder.length);
-        }
-
-        // Template change handlers
-        elements.emailTo.addEventListener('input', updateTemplate);
-        elements.emailSubject.addEventListener('input', updateTemplate);
-        elements.emailBody.addEventListener('input', updateTemplate);
-
-        function updateTemplate() {
-            appState.emailTemplate = {
-                to: elements.emailTo.value,
-                subject: elements.emailSubject.value,
-                body: elements.emailBody.value
-            };
-        }
-
-        // Generate emails
-        elements.generateEmails.addEventListener('click', generateEmailDrafts);
-
-        function generateEmailDrafts() {
-            updateTemplate();
-            
-            if (!appState.emailTemplate.to || !appState.emailTemplate.subject || !appState.emailTemplate.body) {
-                showError('Please fill in all template fields');
-                return;
-            }
-
-            appState.emailDrafts = appState.csvData.map((row, index) => {
-                let processedTo = appState.emailTemplate.to;
-                let processedSubject = appState.emailTemplate.subject;
-                let processedBody = appState.emailTemplate.body;
-
-                // Replace placeholders
-                appState.columns.forEach(column => {
-                    const placeholder = `{{${column}}}`;
-                    const value = String(row[column] || '');
-                    processedTo = processedTo.replace(new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), value);
-                    processedSubject = processedSubject.replace(new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), value);
-                    processedBody = processedBody.replace(new RegExp(placeholder.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), value);
-                });
-
-                return {
-                    id: `draft-${index}`,
-                    to: processedTo,
-                    subject: processedSubject,
-                    body: processedBody,
-                    data: row,
-                    sent: false
-                };
-            });
-
-            setStep('preview');
-        }
-
-        function showEmailPreviews() {
-            const emailsList = elements.emailsList;
-            emailsList.innerHTML = '';
-
-            appState.emailDrafts.forEach(draft => {
-                const card = document.createElement('div');
-                card.className = `email-draft-card ${draft.sent ? 'sent' : ''}`;
-                card.innerHTML = `
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                        <div style="font-weight: 500; font-size: 0.875rem;">${draft.to}</div>
-                        ${draft.sent ? '<span style="color: #059669;">✓</span>' : ''}
-                    </div>
-                    <div style="font-size: 0.875rem; color: #6b7280; margin-bottom: 0.5rem;">${draft.subject}</div>
-                    <div style="font-size: 0.75rem; color: #9ca3af; height: 2.5rem; overflow: hidden;">${draft.body}</div>
-                    <button class="btn btn-primary" style="width: 100%; margin-top: 0.75rem;" onclick="openInOutlook('${draft.id}')">
-                        Open in Outlook
-                    </button>
-                `;
-                
-                card.addEventListener('click', () => selectDraft(draft));
-                emailsList.appendChild(card);
-            });
-
-            // Update counter
-            document.querySelector('#previewStep h2').textContent = `👁️ Email Drafts (${appState.emailDrafts.length})`;
-        }
-
-        function selectDraft(draft) {
-            appState.selectedDraft = draft;
-            
-            // Update selected state
-            document.querySelectorAll('.email-draft-card').forEach(card => {
-                card.classList.remove('selected');
-            });
-            event.currentTarget.classList.add('selected');
-
-            // Show preview
-            elements.selectedEmailPreview.innerHTML = `
-                <h3>Email Preview</h3>
-                <div style="border: 1px solid #e5e7eb; border-radius: 0.5rem; padding: 1rem;">
-                    <div style="margin-bottom: 0.75rem;"><strong>To:</strong> ${draft.to}</div>
-                    <div style="margin-bottom: 0.75rem;"><strong>Subject:</strong> ${draft.subject}</div>
-                    <div style="border-top: 1px solid #e5e7eb; padding-top: 0.75rem;">
-                        <div style="white-space: pre-wrap; font-size: 0.875rem;">${draft.body}</div>
-                    </div>
-                </div>
-            `;
-        }
-
-        // Outlook Integration
-        function openInOutlook(draftId) {
-            const draft = appState.emailDrafts.find(d => d.id === draftId);
-            if (!draft) return;
-
-            const mailtoUrl = `mailto:${encodeURIComponent(draft.to)}?subject=${encodeURIComponent(draft.subject)}&body=${encodeURIComponent(draft.body)}`;
-            window.open(mailtoUrl, '_blank');
-
-            // Mark as sent
-            draft.sent = true;
-            showEmailPreviews();
-        }
-
-        elements.openAllOutlook.addEventListener('click', () => {
-            if (appState.emailDrafts.length > 10) {
-                if (!confirm(`You are about to open ${appState.emailDrafts.length} emails. This may take a moment. Continue?`)) {
-                    return;
-                }
-            }
-
-            appState.emailDrafts.forEach((draft, index) => {
-                setTimeout(() => {
-                    openInOutlook(draft.id);
-                }, index * 500);
-            });
-        });
-
-        // Utility Functions
-        function showError(message) {
-            elements.errorDisplay.textContent = message;
-            elements.errorDisplay.classList.remove('hidden');
-        }
-
-        function clearError() {
-            elements.errorDisplay.classList.add('hidden');
-        }
-
-        function resetApp() {
-            appState = {
-                currentStep: 'upload',
-                csvData: [],
-                columns: [],
-                emailTemplate: { to: '', subject: '', body: '' },
-                emailDrafts: [],
-                selectedDraft: null
-            };
-
-            elements.fileInput.value = '';
-            elements.dataPreview.classList.add('hidden');
-            elements.emailTo.value = '';
-            elements.emailSubject.value = '';
-            elements.emailBody.value = '';
-            
-            clearError();
-            setStep('upload');
-        }
-
-        // Initialize app
-        setStep('upload');
-    </script>
+    
+    <!-- Application Script -->
+    <script src="script.js"></script>
 </body>
 </html>
