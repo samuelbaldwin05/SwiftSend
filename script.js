@@ -458,24 +458,6 @@ function processTemplate(template, data) {
 }
 
 // === EMAIL MANAGEMENT ===
-function setupEmailManagement() {
-    const filterBtns = document.querySelectorAll('.filter-btn');
-    const exportBtn = document.getElementById('exportEmails');
-    const sendAllBtn = document.getElementById('sendAllEmails');
-    
-    filterBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            filterBtns.forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            currentFilter = btn.dataset.filter;
-            updateEmailsTable();
-        });
-    });
-    
-    if (exportBtn) exportBtn.addEventListener('click', exportEmails);
-    if (sendAllBtn) sendAllBtn.addEventListener('click', sendAllEmails);
-}
-
 function updateEmailsTable() {
     const container = document.getElementById('emailsTableContainer');
     
@@ -487,32 +469,26 @@ function updateEmailsTable() {
             </div>`;
         return;
     }
-    
-    let filtered = emailDrafts;
-    if (currentFilter === 'sent') filtered = emailDrafts.filter(draft => draft.sent);
-    if (currentFilter === 'pending') filtered = emailDrafts.filter(draft => !draft.sent);
-    
+
     let html = `
         <table class="table">
             <thead>
                 <tr>
                     <th>Recipient</th>
                     <th>Subject</th>
-                    <th>Status</th>
                     <th>Actions</th>
                 </tr>
             </thead>
             <tbody>`;
     
-    filtered.forEach(draft => {
+    emailDrafts.forEach(draft => {
         html += `
             <tr>
                 <td>${draft.to}</td>
                 <td>${draft.subject}</td>
-                <td>${draft.sent ? 'Sent' : 'Pending'}</td>
                 <td>
                     <div style="display: flex; gap: 8px;">
-                        <button class="btn btn-outline" onclick="sendEmail('${draft.id}')">${draft.sent ? 'Sent ✓' : 'Send'}</button>
+                        <button class="btn btn-outline" onclick="sendEmail('${draft.id}')">${draft.sent ? 'Opened' : 'Open'}</button>
                         <button class="btn-delete" onclick="deleteEmail('${draft.id}')" title="Delete email">×</button>
                     </div>
                 </td>
@@ -540,44 +516,6 @@ function sendEmail(draftId) {
     
     // Then open the mailto link
     window.location.href = mailtoUrl;
-}
-
-function sendAllEmails() {
-    const unsent = emailDrafts.filter(d => !d.sent);
-    if (unsent.length === 0) {
-        alert('All emails have been sent!');
-        return;
-    }
-    
-    if (unsent.length > 5 && !confirm(`This will open ${unsent.length} emails. Continue?`)) {
-        return;
-    }
-    
-    unsent.forEach((draft, index) => {
-        setTimeout(() => sendEmail(draft.id), index * 500);
-    });
-}
-
-function exportEmails() {
-    if (emailDrafts.length === 0) {
-        alert('No emails to export');
-        return;
-    }
-    
-    const csv = [
-        'To,Subject,Body,Status',
-        ...emailDrafts.map(draft => 
-            `"${draft.to}","${draft.subject}","${draft.body.replace(/"/g, '""')}","${draft.sent ? 'Sent' : 'Pending'}"`
-        )
-    ].join('\n');
-    
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'swiftsend-emails.csv';
-    a.click();
-    URL.revokeObjectURL(url);
 }
 
 // === NAVIGATION ===
