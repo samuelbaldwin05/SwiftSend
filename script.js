@@ -53,23 +53,28 @@ function handleFileSelect(e) {
 
 function processFile(file) {
     const extension = file.name.split('.').pop().toLowerCase();
+    const fileType = document.getElementById('fileTypeSelect')?.value || 'normal';
     
     if (extension === 'csv') {
-        parseCSV(file);
+        parseCSV(file, fileType);
     } else if (['xlsx', 'xls'].includes(extension)) {
-        parseExcel(file);
+        parseExcel(file, fileType);
     } else {
         alert('Please upload a CSV or Excel file');
     }
 }
 
-function parseCSV(file) {
+function parseCSV(file, fileType = 'normal') {
     Papa.parse(file, {
         header: true,
         skipEmptyLines: true,
         transform: (value) => typeof value === 'string' ? value.trim() : value,
         complete: function(results) {
-            csvData = results.data;
+            if (fileType === 'pitchbook') {
+                csvData = processPitchBookData(results.data);
+            } else {
+                csvData = results.data;
+            }
             columns = Object.keys(csvData[0] || {});
             showDataPreview();
             updateFieldsList();
@@ -80,7 +85,7 @@ function parseCSV(file) {
     });
 }
 
-function parseExcel(file) {
+function parseExcel(file, fileType = 'normal') {
     const reader = new FileReader();
     reader.onload = function(e) {
         try {
@@ -90,8 +95,7 @@ function parseExcel(file) {
             const worksheet = workbook.Sheets[sheetName];
             const jsonData = XLSX.utils.sheet_to_json(worksheet);
             
-            // Strip whitespace from all string values
-            csvData = jsonData.map(row => {
+            let cleanedData = jsonData.map(row => {
                 const cleanRow = {};
                 Object.keys(row).forEach(key => {
                     const value = row[key];
@@ -99,6 +103,12 @@ function parseExcel(file) {
                 }); 
                 return cleanRow;
             });
+            
+            if (fileType === 'pitchbook') {
+                csvData = processPitchBookData(cleanedData);
+            } else {
+                csvData = cleanedData;
+            }
             
             columns = Object.keys(csvData[0] || {});
             showDataPreview();
@@ -110,14 +120,92 @@ function parseExcel(file) {
     reader.readAsArrayBuffer(file);
 }
 
+// === PITCHBOOK DATA PROCESSING ===
+function processPitchBookData(rawData) {
+    console.log('Processing PitchBook data...');
+    
+    // Row 3 (index 3) has the headers, Row 4+ (index 4+) has the data
+    if (rawData.length < 5) {
+        console.log('Not enough rows for PitchBook data');
+        return [];
+    }
+    
+    const headerRow = rawData[3];
+    console.log('Header row:', headerRow);
+    
+    // Create mapping from header values to column keys
+    const columnMapping = {};
+    Object.keys(headerRow).forEach(key => {
+        const headerValue = headerRow[key];
+        if (headerValue && typeof headerValue === 'string') {
+            columnMapping[headerValue] = key;
+        }
+    });
+    
+    console.log('Column mapping:', columnMapping);
+    
+    const processedData = [];
+    
+    // Process data rows starting from row 4 (index 4)
+    for (let i = 4; i < rawData.length; i++) {
+        const row = rawData[i];
+        
+        // Skip copyright rows
+        if (row.SS && String(row.SS).includes('© PitchBook')) {
+            continue;
+        }
+        
+        // Extract data using the column mapping
+        const companyName = row[columnMapping['Companies']];
+        
+        if (!companyName) continue;
+        
+        const fullName = row[columnMapping['Primary Contact']] || '';
+        
+        // Split name into firstname and lastname
+        let firstname = '';
+        let lastname = '';
+        if (fullName && fullName.trim()) {
+            const nameParts = fullName.trim().split(' ');
+            firstname = nameParts[0] || '';
+            lastname = nameParts[nameParts.length - 1] || '';
+        }
+        
+        const processedRow = {
+            'company': String(companyName).trim(),
+            'name': fullName,
+            'firstname': firstname,
+            'lastname': lastname,
+            'email': row[columnMapping['Primary Contact Email']] || '',
+            'title': row[columnMapping['Primary Contact Title']] || '',
+            'description': row[columnMapping['Description']] || '',
+            'founded': row[columnMapping['Year Founded']] || '', 
+            'location': row[columnMapping['HQ Location']] || '',
+            'industry': row[columnMapping['Primary Industry Sector']] || '',
+            'website': row[columnMapping['Website']] || ''
+        };
+        
+        processedData.push(processedRow);
+    }
+    
+    console.log('Processed companies:', processedData);
+    return processedData;
+}
+
+
 function showDataPreview() {
     const preview = document.getElementById('dataPreview');
     const placeholder = document.getElementById('uploadPlaceholder');
     const stats = document.getElementById('previewStats');
     const table = document.getElementById('previewTable');
+    const clearDiv = document.getElementById('clearDatabase');
     
     // Update stats
     stats.textContent = `${csvData.length} rows, ${columns.length} columns`;
+    
+    // Add clear button
+    // Add clear button with smaller styling
+clearDiv.innerHTML = '<span onclick="clearUploadedData()" class="btn" style="padding: 0px; font-size: 14px;">Clear Data</span>';
     
     // Create scrollable table container
     let html = '<div class="preview-table-container">';
@@ -154,6 +242,38 @@ function showDataPreview() {
 }
 
 
+function clearUploadedData() {
+    // Clear CSV data and columns
+    csvData = [];
+    columns = [];
+    
+    // Reset file input
+    const fileInput = document.getElementById('fileInput');
+    fileInput.value = '';
+    
+    // Reset file type selector
+    const fileTypeSelect = document.getElementById('fileTypeSelect');
+    fileTypeSelect.value = 'normal';
+    
+    // Hide preview, show placeholder
+    const preview = document.getElementById('dataPreview');
+    const placeholder = document.getElementById('uploadPlaceholder');
+    preview.classList.add('hidden');
+    placeholder.style.display = 'block';
+    
+    // Reset fields list
+    updateFieldsList();
+    
+    // Clear template preview if shown
+    const templatePreview = document.getElementById('templatePreview');
+    templatePreview.classList.add('hidden');
+    
+    // Update generate button state (disable since no data)
+    const generateBtn = document.getElementById('generateEmails');
+    generateBtn.disabled = true;
+
+}
+
 // === TEMPLATE EDITOR ===
 function setupTemplateEditor() {
     const emailTo = document.getElementById('emailTo');
@@ -179,7 +299,7 @@ function setupTemplateEditor() {
         pitchbookV: {
             to: '{{email}}',
             subject: 'UConn Hillside Ventures - {{company}}',
-            body: "Hi {{name}},\n\nI'm Vitória from the University of Connecticut's venture firm specializing in manufacturing. We focus on utilizing students with technical backgrounds to gain a deeper understanding of the founders of startups and to both invest in and support their growth and scaling. In our research on manufacturing, {{company}} stood out prominently. We find your company interesting and would love to learn more, and if you are fundraising.\n\nWould you be open to having a call with us in the next few weeks?\n\nBest,\nVitória Lunardi de Castro\nAnalyst at Hillside Ventures\nvld23001@uconn.edu"
+            body: "Hi {{firstname}},\n\nI'm Vitória from the University of Connecticut's venture firm specializing in manufacturing. We focus on utilizing students with technical backgrounds to gain a deeper understanding of the founders of startups and to both invest in and support their growth and scaling. In our research on manufacturing, {{company}} stood out prominently. We find your company interesting and would love to learn more, and if you are fundraising.\n\nWould you be open to having a call with us in the next few weeks?\n\nBest,\nVitória Lunardi de Castro\nAnalyst at Hillside Ventures\nvld23001@uconn.edu"
         },
         meeting: {
             to: '{{email}}',
@@ -379,7 +499,7 @@ function updateEmailsTable() {
                     <th>Recipient</th>
                     <th>Subject</th>
                     <th>Status</th>
-                    <th>Action</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>`;
@@ -390,12 +510,22 @@ function updateEmailsTable() {
                 <td>${draft.to}</td>
                 <td>${draft.subject}</td>
                 <td>${draft.sent ? 'Sent' : 'Pending'}</td>
-                <td><button class="btn btn-outline" onclick="sendEmail('${draft.id}')">${draft.sent ? 'Sent ✓' : 'Send'}</button></td>
+                <td>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-outline" onclick="sendEmail('${draft.id}')">${draft.sent ? 'Sent ✓' : 'Send'}</button>
+                        <button class="btn-delete" onclick="deleteEmail('${draft.id}')" title="Delete email">×</button>
+                    </div>
+                </td>
             </tr>`;
     });
     
     html += '</tbody></table>';
     container.innerHTML = html;
+}
+
+function deleteEmail(draftId) {
+    emailDrafts = emailDrafts.filter(draft => draft.id !== draftId);
+    updateEmailsTable();
 }
 
 function sendEmail(draftId) {
